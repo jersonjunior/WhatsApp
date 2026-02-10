@@ -1,0 +1,2432 @@
+
+[2026-02-10T22:30:10.670Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "05122489C4ABA01D4FC809E98914C677",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:30:10.727Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "05122489C4ABA01D4FC809E98914C677",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:30:10.895Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-7",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:30:10.896Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-8",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:30:10.898Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-9",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "preaccept",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "video",
+          "attrs": {
+            "enc": "none"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:11.017Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F197C6678622B6E5314C75836D554F22",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.020Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "8FDB76ACB9F8DDE3E361B7ED39836291",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.022Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A21EED213B493BE2CA9D21C35FFB9626",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.025Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F197C6678622B6E5314C75836D554F22",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.027Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "8FDB76ACB9F8DDE3E361B7ED39836291",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.028Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A21EED213B493BE2CA9D21C35FFB9626",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:11.030Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-10",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:11.031Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-11",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:11.032Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-12",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:12.412Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "to": "277940302540867@lid",
+    "id": "24419.20788-13"
+  },
+  "content": [
+    {
+      "tag": "accept",
+      "attrs": {
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "call-creator": "277940302540867@lid"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:12.415Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-14",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "ready",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:30:12.778Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "CED8B4137DF95EE7B4297A24F67446EE",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:30:12.789Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "CED8B4137DF95EE7B4297A24F67446EE",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:30:12.795Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "EAFBF0455BB90E5A6FB6614131832977",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.801Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "FD3A154EEC3FC8BD1C1CEB455B007516",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.812Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "EAFBF0455BB90E5A6FB6614131832977",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.817Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "FD3A154EEC3FC8BD1C1CEB455B007516",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.822Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-16",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:12.826Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-17",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:30:12.841Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "E167A3B4F9AD6A9E6D8B993E40944817",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.849Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "E167A3B4F9AD6A9E6D8B993E40944817",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:30:12.856Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24419.20788-18",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC0C509BC1430C2B4F5C7522F5685A3D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:20.657Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A952B59A5A00036FAC2CE5F5603DA686",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:34:20.685Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A952B59A5A00036FAC2CE5F5603DA686",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:34:20.875Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-7",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:34:20.877Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-8",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:34:20.880Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-9",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "preaccept",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "video",
+          "attrs": {
+            "enc": "none"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:21.075Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "4A3889C66FED3EF0FB8662BD9B95D6F8",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.077Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F64788AB2BFCDC21CCD1EE28A0E40B06",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.079Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "D49F06598D30070A2884672135C46307",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.082Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "4A3889C66FED3EF0FB8662BD9B95D6F8",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.084Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F64788AB2BFCDC21CCD1EE28A0E40B06",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.085Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "D49F06598D30070A2884672135C46307",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:21.086Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-10",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:21.088Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-11",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:21.088Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-12",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:22.411Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "to": "277940302540867@lid",
+    "id": "8085.60482-13"
+  },
+  "content": [
+    {
+      "tag": "accept",
+      "attrs": {
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "call-creator": "277940302540867@lid"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:22.413Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-14",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "ready",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:34:22.814Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "D935E8819389A609DC8922F13C30FD97",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:34:22.821Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "D935E8819389A609DC8922F13C30FD97",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:34:22.827Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "94F30D479522E2355A32E46EEA0E1DC0",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.830Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "B3C01278EE503DCBC2DF790A2ABFA0FD",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.839Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "94F30D479522E2355A32E46EEA0E1DC0",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.844Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "B3C01278EE503DCBC2DF790A2ABFA0FD",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.847Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "DD4F0AB9FA2EFEC1229AD564157C9BBF",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.852Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-16",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:22.854Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-17",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:34:22.858Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "DD4F0AB9FA2EFEC1229AD564157C9BBF",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:34:22.862Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "8085.60482-18",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC3B2CEA5C5D798220C4244BF895832D",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.080Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "B115D66DC85634C9F183340794C110B0",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:41:16.138Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "B115D66DC85634C9F183340794C110B0",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:41:16.307Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-8",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.308Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-9",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.314Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-10",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "preaccept",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "video",
+          "attrs": {
+            "enc": "none"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.410Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "0F213C61C6C8A94E9E88D5549933E89E",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.414Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A4676FFCF32320619B936FD28C5F5A9F",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.417Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "145EF89496941747E367D66CECF3B64D",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.429Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "0F213C61C6C8A94E9E88D5549933E89E",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.432Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "A4676FFCF32320619B936FD28C5F5A9F",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.433Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "145EF89496941747E367D66CECF3B64D",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:16.434Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-11",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.435Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-12",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:16.436Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-13",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:17.823Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "to": "277940302540867@lid",
+    "id": "55874.54295-14"
+  },
+  "content": [
+    {
+      "tag": "accept",
+      "attrs": {
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "call-creator": "277940302540867@lid"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:17.824Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-15",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "ready",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:41:18.324Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F1C00E7DFE118C98509598DA12B35FAB",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:41:18.334Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "F1C00E7DFE118C98509598DA12B35FAB",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:41:18.345Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "3288004909D5B4E2F5ED05B3EA796C6B",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.348Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "DA406F0DE39E3FDAE01F8AEAA4F30B05",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.351Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "3288004909D5B4E2F5ED05B3EA796C6B",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.352Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "DA406F0DE39E3FDAE01F8AEAA4F30B05",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.353Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-17",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:18.354Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-18",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:41:18.357Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "E0D8155FAF6B581EC035BE814C34CDF4",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.362Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "E0D8155FAF6B581EC035BE814C34CDF4",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:41:18.366Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "55874.54295-19",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "ACE13A310A75ED0B7D6466ABB9006522",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru2c02",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              12,
+              51,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.405Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "07B6CCEF0FE814E5EE2C7AD7DA0F2058",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:43:04.438Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "07B6CCEF0FE814E5EE2C7AD7DA0F2058",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "offer"
+  }
+}
+
+[2026-02-10T22:43:04.615Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-7",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.616Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-8",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "ringing",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3",
+        "platform": "android"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.621Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-9",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "preaccept",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000",
+            "ptime": "20"
+          }
+        },
+        {
+          "tag": "video",
+          "attrs": {
+            "enc": "none"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.684Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "07A22CD0BF5CFF81B0B5F7BFDDF9F904",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.693Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "07A22CD0BF5CFF81B0B5F7BFDDF9F904",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.697Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "92A58CDA9C585EE00BD1DD684B894206",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.700Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "2CB0D2D13279C59C7A8A00596C0AE971",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.703Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-10",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.706Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "92A58CDA9C585EE00BD1DD684B894206",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.709Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "2CB0D2D13279C59C7A8A00596C0AE971",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:04.712Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-11",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:04.714Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-12",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              222,
+              62,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:06.128Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "to": "277940302540867@lid",
+    "id": "24386.45099-13"
+  },
+  "content": [
+    {
+      "tag": "accept",
+      "attrs": {
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "call-creator": "277940302540867@lid"
+      },
+      "content": [
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "16000"
+          }
+        },
+        {
+          "tag": "audio",
+          "attrs": {
+            "enc": "opus",
+            "rate": "8000"
+          }
+        },
+        {
+          "tag": "net",
+          "attrs": {
+            "medium": "3"
+          }
+        },
+        {
+          "tag": "encopt",
+          "attrs": {
+            "keygen": "2"
+          }
+        },
+        {
+          "tag": "capability",
+          "attrs": {
+            "ver": "1"
+          },
+          "content": {
+            "0": 1,
+            "1": 5,
+            "2": 247,
+            "3": 9,
+            "4": 228,
+            "5": 250,
+            "6": 19
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:06.130Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-14",
+    "to": "277940302540867@lid",
+    "v": "3",
+    "platform": "android"
+  },
+  "content": [
+    {
+      "tag": "ready",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3",
+        "platform": "android",
+        "device_class": "2016"
+      }
+    }
+  ]
+}
+
+[2026-02-10T22:43:06.695Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "7978AF4526EE9C57DFAF30B7ED959935",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:43:06.698Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "7978AF4526EE9C57DFAF30B7ED959935",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "transport"
+  }
+}
+
+[2026-02-10T22:43:06.716Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "92723357EBBBF612B1E14D64F2128471",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.718Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "332B244F28A483C10954E28094B3D962",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.720Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "92723357EBBBF612B1E14D64F2128471",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.721Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "332B244F28A483C10954E28094B3D962",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.722Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-16",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "fbsb12c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              200,
+              181,
+              102,
+              33,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:06.723Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-17",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "bsb1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              57,
+              144,
+              137,
+              54,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
+[2026-02-10T22:43:06.730Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "2C779FBB868EA1D753F13EECA667AEEC",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.732Z] [OUT] ack
+{
+  "tag": "ack",
+  "attrs": {
+    "id": "2C779FBB868EA1D753F13EECA667AEEC",
+    "to": "277940302540867@lid",
+    "class": "call",
+    "type": "relaylatency"
+  }
+}
+
+[2026-02-10T22:43:06.734Z] [OUT] call
+{
+  "tag": "call",
+  "attrs": {
+    "id": "24386.45099-18",
+    "to": "277940302540867@lid"
+  },
+  "content": [
+    {
+      "tag": "relaylatency",
+      "attrs": {
+        "call-creator": "277940302540867@lid",
+        "call-id": "AC605E64B8401E595BB0775570AF1714",
+        "v": "3"
+      },
+      "content": [
+        {
+          "tag": "te",
+          "attrs": {
+            "relay_name": "gru1c01",
+            "latency": "10"
+          },
+          "content": {
+            "type": "Buffer",
+            "data": [
+              157,
+              240,
+              222,
+              62,
+              13,
+              150
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

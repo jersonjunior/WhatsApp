@@ -1,0 +1,563 @@
+/**
+ * Media Bridge - SRTP to RTP Bridge for WhatsApp to Asterisk audio
+ * 
+ * This module:
+ * 1. Connects to WhatsApp relay servers via UDP
+ * 2. Decrypts incoming SRTP packets using werift-rtp
+ * 3. Forwards decrypted RTP to Asterisk ExternalMedia channel
+ */
+
+import * as dgram from 'dgram';
+import { EventEmitter } from 'events';
+import { log } from '../utils/logger';
+import { SrtpSession, RtpPacket, RtpHeader } from 'werift-rtp';
+
+export interface SrtpKeys {
+    masterKey: Buffer;
+    masterSalt: Buffer;
+    localMasterKey?: Buffer; // For outgoing
+    localMasterSalt?: Buffer; // For outgoing
+}
+
+export interface RelayEndpoint {
+    ip: string;
+    port: number;
+    token?: Buffer;
+}
+
+export interface MediaBridgeConfig {
+    localPort: number;
+    portMax?: number; // Optional max port for range
+    asteriskHost: string;
+    asteriskRtpPort: number;
+    srtpKeys?: SrtpKeys;
+    relayEndpoints?: RelayEndpoint[];
+}
+
+export class MediaBridge extends EventEmitter {
+    private udpSocket: dgram.Socket | null = null;
+    private srtpSession: SrtpSession | null = null;
+    private config: MediaBridgeConfig;
+    private connected = false;
+    private packetsReceived = 0;
+    private packetsSentToWhatsApp = 0;
+    private packetsSentToAsterisk = 0;
+    private firstPacketLogged = false;
+    private firstAsteriskPacketLogged = false;
+    private asteriskPt = 111; // Matches SDP in sip/client.ts
+    private whatsappPt = 111; // Default, will be updated from incoming packets
+    private activeRelay: RelayEndpoint | null = null;
+
+    // RTP Normalization State
+    private outSsrc = Math.floor(Math.random() * 0xFFFFFFFF);
+    private outSeq = Math.floor(Math.random() * 0xFFFF);
+    private outTs = Math.floor(Math.random() * 0xFFFFFFFF);
+    private lastInTs = 0;
+    private lastInSeq = 0;
+
+    constructor(config: MediaBridgeConfig) {
+        super();
+        this.config = config;
+    }
+
+    /**
+     * Initialize the media bridge with SRTP keys
+     */
+    async initialize(srtpKeys: SrtpKeys): Promise<void> {
+        log.info('[MediaBridge] Initializing with SRTP keys');
+
+        try {
+            // Create SRTP session for decryption
+            this.srtpSession = new SrtpSession({
+                profile: 0x0001, // SRTP_AES128_CM_HMAC_SHA1_80
+                keys: {
+                    localMasterKey: srtpKeys.localMasterKey || srtpKeys.masterKey,
+                    localMasterSalt: srtpKeys.localMasterSalt || srtpKeys.masterSalt,
+                    remoteMasterKey: srtpKeys.masterKey,
+                    remoteMasterSalt: srtpKeys.masterSalt,
+                },
+            });
+
+            log.info('[MediaBridge] SRTP session created');
+            this.emit('initialized');
+        } catch (error) {
+            log.error('[MediaBridge] Failed to create SRTP session', { error });
+            throw error;
+        }
+    }
+
+    /**
+     * Start listening for SRTP packets with port retry
+     */
+    async start(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            let currentPort = this.config.localPort;
+            const maxPort = this.config.portMax || (currentPort + 200);
+
+            const tryBind = () => {
+                if (currentPort > maxPort) {
+                    reject(new Error(`[MediaBridge] Failed to bind UDP socket: No available ports in range ${this.config.localPort}-${maxPort}`));
+                    return;
+                }
+
+                const socket = dgram.createSocket('udp4');
+
+                socket.once('error', (err: any) => {
+                    socket.close();
+                    if (err.code === 'EADDRINUSE') {
+                        log.warn(`[MediaBridge] Port ${currentPort} in use, trying next...`);
+                        currentPort++;
+                        tryBind();
+                    } else {
+                        log.error('[MediaBridge] UDP socket error', { error: err });
+                        reject(err);
+                    }
+                });
+
+                socket.once('listening', () => {
+                    // Success!
+                    socket.removeAllListeners('error'); // Remove the retry error handler
+                    this.udpSocket = socket;
+
+                    // Add permanent error handler
+                    this.udpSocket.on('error', (err) => {
+                        log.error('[MediaBridge] UDP socket error', { error: err });
+                        this.emit('error', err);
+                    });
+
+                    // Add message handler
+                    this.udpSocket.on('message', (msg, rinfo) => {
+                        this.handleIncomingPacket(msg, rinfo);
+                    });
+
+                    const addr = this.udpSocket.address();
+                    log.info('[MediaBridge] Listening for SRTP packets', {
+                        address: addr.address,
+                        port: addr.port,
+                    });
+
+                    // Update config with actual port
+                    this.config.localPort = addr.port;
+
+                    this.connected = true;
+                    this.emit('started');
+                    resolve();
+                });
+
+                socket.bind(currentPort);
+            };
+
+            tryBind();
+        });
+    }
+
+    /**
+     * Handle incoming packet from WhatsApp relay or Asterisk
+     */
+    private handleIncomingPacket(msg: Buffer, rinfo: dgram.RemoteInfo): void {
+        this.packetsReceived++;
+
+        try {
+            // Check if this is an RTP packet (starts with 0x80 or 0x81)
+            const firstByte = msg[0];
+            if ((firstByte & 0xC0) !== 0x80) {
+                if (this.packetsReceived % 100 === 1) {
+                    log.debug('[MediaBridge] Non-RTP packet received', { firstByte: `0x${firstByte.toString(16)}`, from: `${rinfo.address}:${rinfo.port}` });
+                }
+                return;
+            }
+
+            // Detect if from Asterisk (by IP)
+            if (rinfo.address === this.config.asteriskHost) {
+                if (rinfo.port === this.config.asteriskRtpPort || this.config.asteriskRtpPort === 0) {
+                    this.handleAsteriskPacket(msg);
+                }
+                return;
+            }
+
+            // Otherwise assume from WhatsApp relay (SRTP) -> Decrypt and send to Asterisk
+            if (this.srtpSession) {
+                if (this.packetsReceived < 5) {
+                    log.info('[MediaBridge] 🔒 Received candidate SRTP packet', {
+                        from: `${rinfo.address}:${rinfo.port}`,
+                        len: msg.length,
+                        firstBytes: msg.slice(0, 4).toString('hex')
+                    });
+                }
+
+                try {
+                    const decrypted = this.srtpSession.decrypt(msg);
+                    if (decrypted) {
+                        const pt = decrypted[1] & 0x7F;
+
+                        // Store the PT WhatsApp is using
+                        if (this.whatsappPt !== pt) {
+                            log.info('[MediaBridge] Detected WhatsApp Payload Type', { requested: this.whatsappPt, actual: pt });
+                            this.whatsappPt = pt;
+                        }
+
+                        if (!this.firstPacketLogged) {
+                            log.info('[MediaBridge] ✅ Successfully decrypted FIRST SRTP packet!', {
+                                pt,
+                                size: decrypted.length
+                            });
+                            this.firstPacketLogged = true;
+                            this.emit('audio-received'); // Notify listeners flow works
+                        }
+
+                        // Always update active relay to the last one that sent us a valid packet
+                        if (!this.activeRelay || this.activeRelay.ip !== rinfo.address || this.activeRelay.port !== rinfo.port) {
+                            log.info('[MediaBridge] Setting active relay', { ip: rinfo.address, port: rinfo.port });
+                            this.activeRelay = { ip: rinfo.address, port: rinfo.port };
+                        }
+
+                        // Rewrite PT if it doesn't match Asterisk setup (111)
+                        if (pt !== this.asteriskPt) {
+                            decrypted[1] = (decrypted[1] & 0x80) | this.asteriskPt;
+                        }
+
+                        this.forwardToAsterisk(decrypted);
+                    }
+                } catch (err) {
+                    // Log the first few decryption errors in detail
+                    if (this.packetsReceived < 50 || this.packetsReceived % 500 === 0) {
+                        log.error('[MediaBridge] Decryption error', {
+                            error: (err as any).message,
+                            msgSize: msg.length,
+                            firstBytes: msg.slice(0, 12).toString('hex')
+                        });
+                    }
+                }
+            } else {
+                if (this.packetsReceived % 200 === 1) {
+                    log.info('[MediaBridge] Waiting for SRTP keys... dropping encrypted packets');
+                }
+            }
+
+        } catch (error) {
+            log.error('[MediaBridge] Error in handleIncomingPacket', { error });
+        }
+    }
+
+    /**
+     * Handle plain RTP packet from Asterisk
+     */
+    private handleAsteriskPacket(msg: Buffer): void {
+        const pt = msg[1] & 0x7F;
+
+        // Warn if not Opus (111)
+        // Detect codec mismatch
+        if (pt === 0 || pt === 8) { // PCMU or PCMA
+            if (this.packetsReceived % 100 === 0) {
+                log.error('[MediaBridge] ❌ CRITICAL: Asterisk is sending G.711 (PCMU/A), but WhatsApp REQUIRES Opus!');
+                log.error('[MediaBridge] ❌ The phone will receive silence. Change Asterisk config to: allow=opus');
+            }
+        }
+
+        if (!this.firstAsteriskPacketLogged) {
+            log.info('[MediaBridge] Received FIRST RTP packet from Asterisk', {
+                pt,
+                size: msg.length,
+                ssrc: msg.readUInt32BE(8),
+                seq: msg.readUInt16BE(2),
+                firstBytes: msg.slice(12, 16).toString('hex')
+            });
+            this.firstAsteriskPacketLogged = true;
+        }
+
+        // Rewrite PT to match what WhatsApp expects (what it's sending us)
+        if (pt !== this.whatsappPt) {
+            msg[1] = (msg[1] & 0x80) | this.whatsappPt;
+        }
+
+        // Use active relay if we have one, otherwise fall back to first configured relay
+        const target = this.activeRelay || (this.config.relayEndpoints && this.config.relayEndpoints[0]);
+
+        if (target) {
+            this.sendToWhatsApp(msg, target);
+        } else {
+            if (this.packetsReceived % 100 === 0) {
+                log.warn('[MediaBridge] No relay available to send Asterisk audio');
+            }
+        }
+    }
+
+    /**
+     * Forward RTP packet to Asterisk
+     */
+    private forwardToAsterisk(rtpPacket: Buffer): void {
+        if (!this.udpSocket || !this.connected) return;
+
+        try {
+            this.udpSocket.send(
+                rtpPacket,
+                this.config.asteriskRtpPort,
+                this.config.asteriskHost,
+                (err) => {
+                    if (err) {
+                        if ((err as any).code !== 'ERR_SOCKET_DGRAM_NOT_RUNNING') {
+                            log.error('[MediaBridge] Failed to send to Asterisk', { error: err });
+                        }
+                    } else {
+                        this.packetsSentToAsterisk++;
+                    }
+                }
+            );
+        } catch (error) {
+            if ((error as any).code !== 'ERR_SOCKET_DGRAM_NOT_RUNNING') {
+                log.error('[MediaBridge] Try-send error to Asterisk', { error });
+            }
+        }
+    }
+
+    /**
+     * Connect to WhatsApp relay server
+     */
+    async connectToRelay(endpoint: RelayEndpoint): Promise<void> {
+        if (!this.udpSocket) {
+            throw new Error('MediaBridge not started');
+        }
+
+        log.info('[MediaBridge] Connecting to relay', endpoint);
+
+        // Send initial binding request (STUN-like)
+        // WhatsApp uses a proprietary relay protocol
+        const bindingRequest = this.createRelayBindingRequest();
+
+        this.udpSocket.send(
+            bindingRequest,
+            endpoint.port,
+            endpoint.ip,
+            (err) => {
+                if (err) {
+                    log.error('[MediaBridge] Failed to connect to relay', { error: err });
+                } else {
+                    log.info('[MediaBridge] Relay binding sent');
+                }
+            }
+        );
+    }
+
+    /**
+     * Create a relay binding request
+     * This is a placeholder - actual format needs to be reverse engineered
+     */
+    private createRelayBindingRequest(): Buffer {
+        // Placeholder STUN binding request
+        // Real format would come from analyzing wavoip.node behavior
+        return Buffer.from([
+            0x00, 0x01, // STUN Binding Request
+            0x00, 0x00, // Message Length
+            0x21, 0x12, 0xa4, 0x42, // Magic Cookie
+            // Transaction ID (12 bytes)
+            0x01, 0x02, 0x03, 0x04,
+            0x05, 0x06, 0x07, 0x08,
+            0x09, 0x0a, 0x0b, 0x0c,
+        ]);
+    }
+
+    /**
+     * Send RTP packet to WhatsApp (for audio from Asterisk)
+     */
+    sendToWhatsApp(rtpPacket: Buffer, endpoint: RelayEndpoint): void {
+        if (!this.udpSocket || !this.connected) return;
+
+        try {
+            let outPacket = rtpPacket;
+
+            if (this.srtpSession) {
+                // De-serialize RTP packet to get header and payload
+                const packet = RtpPacket.deSerialize(rtpPacket);
+
+                // --- RTP Normalization ---
+                // Asterisk might switch streams or SSRCs. We must present a consistent stream to WhatsApp.
+
+                // 1. Rewrite SSRC to our constant
+                packet.header.ssrc = this.outSsrc;
+
+                // 2. Continuous Sequence Numbers
+                this.outSeq = (this.outSeq + 1) & 0xFFFF;
+                packet.header.sequenceNumber = this.outSeq;
+
+                // 3. Map Timestamp (Preserve duration/delta)
+                const currentInTs = packet.header.timestamp;
+                if (this.lastInTs === 0) {
+                    this.lastInTs = currentInTs;
+                }
+                const delta = (currentInTs - this.lastInTs);
+                this.lastInTs = currentInTs;
+
+                this.outTs = (this.outTs + delta) >>> 0; // unsigned 32-bit wrap
+                packet.header.timestamp = this.outTs;
+
+                // Encrypt payload using MODIFIED header information
+                outPacket = this.srtpSession.encrypt(packet.payload, packet.header);
+            }
+
+            if (!this.udpSocket || !this.connected) return;
+
+            this.udpSocket.send(
+                outPacket,
+                endpoint.port,
+                endpoint.ip,
+                (err) => {
+                    if (err) {
+                        if ((err as any).code !== 'ERR_SOCKET_DGRAM_NOT_RUNNING') {
+                            log.error('[MediaBridge] Failed to send to WhatsApp', { error: err });
+                        }
+                    } else {
+                        this.packetsSentToWhatsApp++;
+                    }
+                }
+            );
+        } catch (error) {
+            if ((error as any).code !== 'ERR_SOCKET_DGRAM_NOT_RUNNING') {
+                log.error('[MediaBridge] Send error to WhatsApp', { error });
+            }
+        }
+    }
+
+    /**
+     * Update relay endpoints dynamically
+     */
+    updateRelays(relays: RelayEndpoint[]): void {
+        if (!relays || relays.length === 0) return;
+
+        // Add only new relays
+        const currentIps = new Set(this.config.relayEndpoints?.map(r => `${r.ip}:${r.port}`) || []);
+        const newRelays = relays.filter(r => !currentIps.has(`${r.ip}:${r.port}`));
+
+        if (newRelays.length > 0) {
+            this.config.relayEndpoints = [...(this.config.relayEndpoints || []), ...newRelays];
+            log.info('[MediaBridge] Added new relay endpoints', { count: newRelays.length });
+
+            // If we don't have an active relay yet, use the first new one as a candidate
+            if (!this.activeRelay) {
+                this.activeRelay = newRelays[0];
+                log.info('[MediaBridge] Set initial active relay from update', { relay: `${this.activeRelay.ip}:${this.activeRelay.port}` });
+            }
+
+            // Poke each new relay to open NAT - HANDLED BY STUN CLIENT IN CALL BRIDGE
+            // for (const relay of newRelays) {
+            //     this.connectToRelay(relay).catch(() => { });
+            // }
+        }
+    }
+
+    /**
+     * Explicitly set the active relay (e.g. after STUN success)
+     */
+    setActiveRelay(relay: RelayEndpoint): void {
+        log.info('[MediaBridge] Manually setting active relay', { relay: `${relay.ip}:${relay.port}` });
+        this.activeRelay = relay;
+    }
+
+    private testToneInterval: NodeJS.Timeout | null = null;
+
+    /**
+     * Start pushing silence/test packets to WhatsApp to open the relay
+     * This is crucial if WhatsApp waits for incoming media before sending its own.
+     */
+    startAudioTestTone(): void {
+        if (this.testToneInterval) return;
+
+        log.info('[MediaBridge] Starting audio test tone (Silence Injection)...');
+
+        // Opus Silence Frame (3 bytes): 0xF8, 0xFF, 0xFE
+        const silencePayload = Buffer.from([0xF8, 0xFF, 0xFE]);
+
+        this.testToneInterval = setInterval(() => {
+            if (!this.activeRelay || !this.srtpSession) return;
+
+            try {
+                // Construct a valid RTP packet locally
+                // We use werift-rtp's RtpPacket to help us serialized, then encrypt
+                // Actually, we can reuse logic or build manually.
+                // Let's build a raw buffer and encrypt it using srtpSession.encrypt which handles seq/ssrc if we pass header?
+                // No, we already have normalization state.
+
+                // Manually build RTP Header (12 bytes)
+                const header = Buffer.alloc(12);
+                header[0] = 0x80; // V=2, P=0, X=0, CC=0
+                header[1] = 0x80 | (this.whatsappPt & 0x7F); // M=1 (marker for silence?), PT
+
+                this.outSeq = (this.outSeq + 1) & 0xFFFF;
+                header.writeUInt16BE(this.outSeq, 2);
+
+                this.outTs = (this.outTs + 960) >>> 0; // 960 samples (20ms)
+                header.writeUInt32BE(this.outTs, 4);
+
+                header.writeUInt32BE(this.outSsrc, 8);
+
+                // Valid header object for werift (it needs it to compute Auth Tag)
+                const headerObj = RtpHeader.deSerialize(header);
+
+                // Encrypt payload
+                const encrypted = this.srtpSession.encrypt(silencePayload, headerObj);
+
+                this.udpSocket?.send(encrypted, this.activeRelay.port, this.activeRelay.ip);
+
+            } catch (e) {
+                // ignore
+            }
+        }, 20); // 20ms
+    }
+
+    stopAudioTestTone(): void {
+        if (this.testToneInterval) {
+            clearInterval(this.testToneInterval);
+            this.testToneInterval = null;
+            log.info('[MediaBridge] Stopped audio test tone');
+        }
+    }
+
+    /**
+     * Update Asterisk RTP destination port dynamically
+     */
+    updateAsteriskRtp(port: number): void {
+        if (this.config.asteriskRtpPort !== port) {
+            log.info('[MediaBridge] Updating Asterisk RTP port', { old: this.config.asteriskRtpPort, new: port });
+            this.config.asteriskRtpPort = port;
+        }
+    }
+
+    /**
+     * Stop the media bridge
+     */
+    stop(): void {
+        if (this.udpSocket) {
+            this.udpSocket.close();
+            this.udpSocket = null;
+        }
+        this.connected = false;
+        log.info('[MediaBridge] Stopped', {
+            packetsTotalReceived: this.packetsReceived,
+            sentToAsterisk: this.packetsSentToAsterisk,
+            sentToWhatsApp: this.packetsSentToWhatsApp,
+        });
+        this.emit('stopped');
+    }
+
+    /**
+     * Get bridge statistics
+     */
+    getStats(): { packetsReceived: number; sentToAsterisk: number; sentToWhatsApp: number; connected: boolean } {
+        return {
+            packetsReceived: this.packetsReceived,
+            sentToAsterisk: this.packetsSentToAsterisk,
+            sentToWhatsApp: this.packetsSentToWhatsApp,
+            connected: this.connected,
+        };
+    }
+
+    isConnected(): boolean {
+        return this.connected;
+    }
+
+    /**
+     * Get the underlying UDP socket
+     */
+    getSocket(): dgram.Socket | null {
+        return this.udpSocket;
+    }
+}

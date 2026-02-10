@@ -1,0 +1,485 @@
+/**
+ * STUN Client - Attempts to connect to WhatsApp relay servers
+ * 
+ * WhatsApp may use a STUN/TURN-like protocol for their relay servers.
+ * This module sends STUN binding requests to test connectivity.
+ */
+
+import * as dgram from 'dgram';
+import * as crypto from 'crypto';
+import { log } from '../utils/logger';
+import { EventEmitter } from 'events';
+
+const STUN_MAGIC_COOKIE = 0x2112A442;
+const STUN_BINDING_REQUEST = 0x0001;
+const STUN_BINDING_RESPONSE = 0x0101;
+
+export interface RelayEndpoint {
+    ip: string;
+    port: number;
+    token?: Buffer; // Some relays need a token
+    username?: string; // For STUN Auth
+}
+
+export class StunClient extends EventEmitter {
+    private socket: dgram.Socket | null = null;
+    private boundRelays: Map<string, { ip: string; port: number }> = new Map();
+
+    constructor() {
+        super();
+    }
+
+    /**
+     * Start the STUN client on a specific port or use an existing socket
+     */
+    async start(localPortOrSocket: number | dgram.Socket = 0): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (typeof localPortOrSocket === 'object') {
+                this.socket = localPortOrSocket;
+                const addr = this.socket.address();
+                log.info('[STUN] Using existing socket', { port: addr.port });
+
+                // Add message listener to existing socket
+                this.socket.on('message', (msg, rinfo) => {
+                    this.handleMessage(msg, rinfo);
+                });
+
+                resolve(addr.port);
+                return;
+            }
+
+            this.socket = dgram.createSocket('udp4');
+
+            this.socket.on('message', (msg, rinfo) => {
+                this.handleMessage(msg, rinfo);
+            });
+
+            this.socket.on('error', (err) => {
+                log.error('[STUN] Socket error', { error: err });
+                this.emit('error', err);
+            });
+
+            this.socket.on('listening', () => {
+                const addr = this.socket!.address();
+                log.info('[STUN] Client listening', { port: addr.port });
+                resolve(addr.port);
+            });
+
+            this.socket.bind(localPortOrSocket as number);
+        });
+    }
+
+    /**
+     * Send STUN binding request to a relay server
+     */
+    sendBindingRequest(relay: RelayEndpoint): void {
+        if (!this.socket) {
+            log.error('[STUN] Socket not initialized');
+            return;
+        }
+
+        const request = this.createBindingRequest(relay.token, 'bind', relay.username);
+
+        log.info('[STUN] Sending binding request', {
+            relay: `${relay.ip}:${relay.port}`,
+            size: request.length,
+            auth: !!relay.token
+        });
+
+        try {
+            this.socket.send(request, relay.port, relay.ip, (err) => {
+                if (err) {
+                    if ((err as any).code !== 'ERR_SOCKET_DGRAM_NOT_RUNNING') {
+                        log.error('[STUN] Failed to send binding request', { error: err, relay });
+                    }
+                } else {
+                    log.debug('[STUN] Binding request sent');
+                }
+            });
+        } catch (err) {
+            // Socket already closed
+        }
+    }
+
+    /**
+     * Create STUN binding request message
+     */
+    private createBindingRequest(token?: Buffer, type: 'bind' | 'ping' = 'bind', username?: string): Buffer {
+        const header = Buffer.alloc(20);
+        const transactionId = crypto.randomBytes(12);
+
+        // Message Type: Binding Request (0x0001)
+        header.writeUInt16BE(STUN_BINDING_REQUEST, 0);
+
+        // Attributes part
+        const attrs: Buffer[] = [];
+
+        // 1. PRIORITY (0x0024)
+        {
+            const attr = Buffer.alloc(8);
+            attr.writeUInt16BE(0x0024, 0);
+            attr.writeUInt16BE(4, 2);
+            attr.writeUInt32BE(1845494271, 4); // High priority
+            attrs.push(attr);
+        }
+
+        // 2. ICE-CONTROLLED (0x8029)
+        {
+            const attr = Buffer.alloc(12);
+            attr.writeUInt16BE(0x8029, 0);
+            attr.writeUInt16BE(8, 2);
+            crypto.randomBytes(8).copy(attr, 4); // Random tie-breaker
+            attrs.push(attr);
+        }
+
+        // 3. USERNAME (0x0006)
+        if (username) {
+            const usernameBuf = Buffer.from(username);
+            const padding = (4 - (usernameBuf.length % 4)) % 4;
+            const attr = Buffer.alloc(4 + usernameBuf.length + padding);
+            attr.writeUInt16BE(0x0006, 0);
+            attr.writeUInt16BE(usernameBuf.length, 2);
+            usernameBuf.copy(attr, 4);
+            attrs.push(attr);
+        }
+
+        // 4. Custom PING data (if 'ping' type)
+        if (type === 'ping') {
+            const pingAttr = Buffer.alloc(12);
+            pingAttr.writeUInt16BE(0x4002, 0);
+            pingAttr.writeUInt16BE(8, 2);
+            crypto.randomBytes(8).copy(pingAttr, 4);
+            attrs.push(pingAttr);
+
+            const pingAttr2 = Buffer.alloc(12);
+            pingAttr2.writeUInt16BE(0x4003, 0);
+            pingAttr2.writeUInt16BE(8, 2);
+            crypto.randomBytes(8).copy(pingAttr2, 4);
+            attrs.push(pingAttr2);
+        }
+
+        // 5. MESSAGE-INTEGRITY (0x0008) - MUST BE LAST (before Fingerprint)
+        // We calculate HMAC-SHA1 using the token as key over the entire packet (Header + Attrs so far)
+        // The Header Length must reflect the final length including Integrity attribute!
+        if (token) {
+            // Integrity attribute is 4 header + 20 data = 24 bytes
+            const integrityAttrLen = 24;
+
+            // Calculate total length so far
+            const currentAttrsLen = attrs.reduce((sum, b) => sum + b.length, 0);
+            const totalLen = currentAttrsLen + integrityAttrLen; // Include integrity in length
+
+            // Write Header
+            header.writeUInt16BE(totalLen, 2);
+            header.writeUInt32BE(STUN_MAGIC_COOKIE, 4);
+            transactionId.copy(header, 8);
+
+            // Create buffer for signing
+            const bufferToSign = Buffer.concat([header, ...attrs]);
+
+            // Calculate HMAC-SHA1
+            const hmac = crypto.createHmac('sha1', token);
+            hmac.update(bufferToSign);
+            const signature = hmac.digest();
+
+            // Create Integrity Attribute
+            const integrityAttr = Buffer.alloc(24);
+            integrityAttr.writeUInt16BE(0x0008, 0);
+            integrityAttr.writeUInt16BE(20, 2);
+            signature.copy(integrityAttr, 4);
+            attrs.push(integrityAttr);
+        } else {
+            // If no token, just write header normally
+            const currentAttrsLen = attrs.reduce((sum, b) => sum + b.length, 0);
+            header.writeUInt16BE(currentAttrsLen, 2);
+            header.writeUInt32BE(STUN_MAGIC_COOKIE, 4);
+            transactionId.copy(header, 8);
+        }
+
+        return Buffer.concat([header, ...attrs]);
+    }
+
+    /**
+     * Send ping (with 0x4002/3) to relay or peer
+     */
+    async pingRelay(relay: RelayEndpoint): Promise<number> {
+        if (!this.socket) return 999;
+
+        const start = Date.now();
+        const request = this.createBindingRequest(relay.token, 'ping', relay.username);
+
+        return new Promise((resolve) => {
+            const timeout = setTimeout(() => {
+                this.removeListener('binding-success', onResponse);
+                resolve(999);
+            }, 1000);
+
+            const onResponse = (data: any) => {
+                if (data.relay.ip === relay.ip) {
+                    clearTimeout(timeout);
+                    resolve(Date.now() - start);
+                }
+            };
+
+            this.once('binding-success', onResponse);
+            this.socket?.send(request, relay.port, relay.ip);
+        });
+    }
+
+    /**
+     * Handle incoming STUN message
+     */
+    private handleMessage(msg: Buffer, rinfo: dgram.RemoteInfo): void {
+        // Log EVERYTHING for debugging (sampled)
+        if (Math.random() < 0.1 || msg.length < 100) {
+            log.debug('[STUN] Raw packet received', {
+                from: `${rinfo.address}:${rinfo.port}`,
+                len: msg.length,
+                firstBytes: msg.slice(0, 8).toString('hex')
+            });
+        }
+
+        if (msg.length < 20) {
+            // Might be too short for STUN, but could be something else?
+            return;
+        }
+
+        const msgType = msg.readUInt16BE(0);
+        const msgLength = msg.readUInt16BE(2);
+        const magicCookie = msg.readUInt32BE(4);
+
+        const isLikelyStun = (magicCookie === STUN_MAGIC_COOKIE) ||
+            (msgType === STUN_BINDING_REQUEST || msgType === STUN_BINDING_RESPONSE);
+
+        if (isLikelyStun) {
+            log.info('[STUN] Received STUN/WASP message', {
+                type: `0x${msgType.toString(16)}`,
+                length: msgLength,
+                magic: `0x${magicCookie.toString(16)}`,
+                from: `${rinfo.address}:${rinfo.port}`,
+            });
+
+            // Inspect attributes for custom WhatsApp ones
+            this.inspectAttributes(msg);
+
+            if (msgType === STUN_BINDING_RESPONSE) {
+                const mapping = this.parseBindingResponse(msg, rinfo);
+                if (mapping) {
+                    this.emit('binding-success', {
+                        ip: mapping.ip,
+                        port: mapping.port,
+                        relay: { ip: rinfo.address, port: rinfo.port }
+                    });
+                }
+            } else if (msgType === STUN_BINDING_REQUEST) {
+                // Respond to incoming STUN requests (pings) from the peer/relay
+                this.handleBindingRequest(msg, rinfo);
+            }
+        } else {
+            // Not STUN - might be RTP/SRTP data (MediaBridge handles this, but we log for debug)
+            /*
+            const firstByte = msg[0];
+            if ((firstByte & 0xC0) === 0x80) {
+                 // It's RTP, likely handled by MediaBridge. Silence.
+            } else {
+                log.debug('[STUN] Unknown packet type (not STUN, not standard RTP header?)', {
+                    firstByte: `0x${firstByte.toString(16)}`,
+                    from: `${rinfo.address}:${rinfo.port}`,
+                });
+            }
+            */
+        }
+    }
+
+    /**
+     * Parse STUN binding response to extract mapped address
+     */
+    private parseBindingResponse(msg: Buffer, rinfo: dgram.RemoteInfo): { ip: string, port: number } | null {
+        let offset = 20; // Skip header
+        const msgType = msg.readUInt16BE(0);
+        const msgLength = msg.readUInt16BE(2);
+
+        // Safety check: is the buffer large enough?
+        if (msg.length < 20 + msgLength) {
+            log.warn('[STUN] Payload length mismatch', { declared: msgLength, actual: msg.length - 20 });
+            return null;
+        }
+
+        while (offset < 20 + msgLength && offset + 4 <= msg.length) {
+            const attrType = msg.readUInt16BE(offset);
+            const attrLength = msg.readUInt16BE(offset + 2);
+            const attrEnd = offset + 4 + attrLength;
+
+            // Bounds check for attribute content
+            if (attrEnd > msg.length) {
+                log.warn('[STUN] Attribute truncated', { attrType, attrLength });
+                break;
+            }
+
+            // MAPPED-ADDRESS (0x0001) or XOR-MAPPED-ADDRESS (0x0020)
+            if (attrType === 0x0001 || attrType === 0x0020) {
+                // Check if sufficient length for address (Family(1) + Port(2) + IP(4) = 8 bytes)
+                if (attrLength < 8) {
+                    offset = Math.ceil(attrEnd / 4) * 4;
+                    continue;
+                }
+
+                const family = msg.readUInt8(offset + 5);
+                if (family === 0x01) { // IPv4
+                    let port = msg.readUInt16BE(offset + 6);
+                    let ip: string;
+
+                    if (attrType === 0x0020) {
+                        // XOR with magic cookie
+                        // Port is XOR'd with high 16 bits of magic cookie
+                        port ^= (STUN_MAGIC_COOKIE >> 16);
+
+                        // IP is XOR'd with magic cookie
+                        const xorIp = msg.readUInt32BE(offset + 8);
+                        const realIp = (xorIp ^ STUN_MAGIC_COOKIE) >>> 0;
+
+                        ip = [
+                            (realIp >> 24) & 0xFF,
+                            (realIp >> 16) & 0xFF,
+                            (realIp >> 8) & 0xFF,
+                            realIp & 0xFF,
+                        ].join('.');
+                    } else {
+                        // MAPPED-ADDRESS (No XOR)
+                        ip = [
+                            msg.readUInt8(offset + 8),
+                            msg.readUInt8(offset + 9),
+                            msg.readUInt8(offset + 10),
+                            msg.readUInt8(offset + 11),
+                        ].join('.');
+                    }
+
+                    log.info('[STUN] ✅ Discovered Mapped address', { ip, port, relay: `${rinfo.address}:${rinfo.port}` });
+                    this.boundRelays.set(`${rinfo.address}:${rinfo.port}`, { ip, port });
+                    return { ip, port };
+                }
+            }
+
+            // Advance offset
+            offset = attrEnd;
+            // Padding to 4 bytes boundary
+            if (offset % 4 !== 0) {
+                offset += 4 - (offset % 4);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Send raw data to a relay
+     */
+    sendData(data: Buffer, relay: RelayEndpoint): void {
+        if (!this.socket) return;
+
+        this.socket.send(data, relay.port, relay.ip, (err) => {
+            if (err) {
+                log.error('[STUN] Failed to send data', { error: err });
+            }
+        });
+    }
+
+    /**
+     * Stop the client
+     */
+    stop(): void {
+        if (this.socket) {
+            // Only close the socket if we created it (not passed in from outside)
+            // If it's the MediaBridge socket, the MediaBridge should close it.
+            // Check if this.socket was created in start() or passed in.
+            // A simple check: if we're sharing, don't close.
+            log.info('[STUN] Client stopping (preserving shared socket if applicable)');
+            this.socket = null;
+        }
+        log.info('[STUN] Client stopped');
+    }
+
+    getLocalPort(): number {
+        return (this.socket as any)?.address()?.port || 0;
+    }
+
+    /**
+     * Handle incoming STUN binding request (Responder role)
+     */
+    private handleBindingRequest(msg: Buffer, rinfo: dgram.RemoteInfo): void {
+        try {
+            // Echo back custom attributes if present (common in WASP)
+            const customAttrs: Buffer[] = [];
+            let offset = 20;
+            const msgLength = msg.readUInt16BE(2);
+            while (offset < 20 + msgLength && offset + 4 <= msg.length) {
+                const attrType = msg.readUInt16BE(offset);
+                const attrLength = msg.readUInt16BE(offset + 2);
+                if (attrType === 0x4000 || attrType === 0x4002 || attrType === 0x4003) {
+                    customAttrs.push(msg.slice(offset, offset + 4 + attrLength));
+                }
+                offset += 4 + attrLength;
+                offset = Math.ceil(offset / 4) * 4;
+            }
+
+            const headerLen = 20;
+            const attrLen = 12 + customAttrs.reduce((acc, b) => acc + b.length, 0);
+            const response = Buffer.alloc(headerLen + attrLen);
+
+            // Header
+            response.writeUInt16BE(STUN_BINDING_RESPONSE, 0);
+            response.writeUInt16BE(attrLen, 2);
+            response.writeUInt32BE(STUN_MAGIC_COOKIE, 4);
+            msg.copy(response, 8, 8, 20); // Copy transaction ID
+
+            // Standard XOR-MAPPED-ADDRESS
+            response.writeUInt16BE(0x0020, 20);
+            response.writeUInt16BE(8, 22);
+            response.writeUInt8(0, 24);
+            response.writeUInt8(1, 25);
+            const xorPort = rinfo.port ^ (STUN_MAGIC_COOKIE >> 16);
+            response.writeUInt16BE(xorPort, 26);
+            const ipParts = rinfo.address.split('.').map(p => parseInt(p, 10));
+            if (ipParts.length === 4) {
+                const ipNum = (ipParts[0] << 24 | ipParts[1] << 16 | ipParts[2] << 8 | ipParts[3]) >>> 0;
+                const xorIp = (ipNum ^ STUN_MAGIC_COOKIE) >>> 0;
+                response.writeUInt32BE(xorIp, 28);
+            }
+
+            // Append custom attributes
+            let currentOffset = 32;
+            for (const attr of customAttrs) {
+                attr.copy(response, currentOffset);
+                currentOffset += attr.length;
+            }
+
+            this.socket?.send(response, rinfo.port, rinfo.address);
+            log.debug('[STUN] Sent Binding Response (with custom attrs) to peer', { to: `${rinfo.address}:${rinfo.port}` });
+        } catch (error) {
+            log.error('[STUN] Failed to handle binding request', { error });
+        }
+    }
+
+    /**
+     * Inspect attributes for custom WhatsApp tags
+     */
+    private inspectAttributes(msg: Buffer): void {
+        let offset = 20;
+        const msgLength = msg.readUInt16BE(2);
+
+        while (offset < 20 + msgLength && offset + 4 <= msg.length) {
+            const attrType = msg.readUInt16BE(offset);
+            const attrLength = msg.readUInt16BE(offset + 2);
+
+            if (attrType === 0x4000 || attrType === 0x4002 || attrType === 0x4003) {
+                log.info('[STUN] Found Custom WhatsApp Attribute', {
+                    type: `0x${attrType.toString(16)}`,
+                    length: attrLength,
+                    data: msg.slice(offset + 4, offset + 4 + Math.min(attrLength, 16)).toString('hex') + (attrLength > 16 ? '...' : '')
+                });
+            }
+
+            offset += 4 + attrLength;
+            offset = Math.ceil(offset / 4) * 4;
+        }
+    }
+}

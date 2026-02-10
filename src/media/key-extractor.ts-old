@@ -1,0 +1,445 @@
+/**
+ * SRTP Key Extractor - Extracts SRTP keys from WhatsApp call offer
+ * 
+ * WhatsApp call offers contain encrypted audio keys that need to be
+ * decrypted to establish the SRTP session.
+ */
+
+import { log } from '../utils/logger';
+
+export interface ExtractedKeys {
+    masterKey: Buffer;
+    masterSalt: Buffer;
+    relayEndpoints: { ip: string; port: number; token?: Buffer }[];
+}
+
+/**
+ * Extract SRTP keys from decrypted protobuf offer
+ */
+export function extractKeysFromDecryptedProto(decryptedJson: any): { masterKey: Buffer, masterSalt: Buffer } | null {
+    try {
+        log.info('[KeyExtractor] Extracting keys from decrypted proto');
+
+        // The decrypted JSON structure from Baileys looks like:
+        // { "call": { "callKey": { "type": "Buffer", "data": [...] } } }
+        const callKeyData = decryptedJson?.call?.callKey;
+
+        if (!callKeyData) {
+            log.warn('[KeyExtractor] No callKey found in decrypted proto');
+            return null;
+        }
+
+        let callKey: Buffer;
+        if (typeof callKeyData === 'string') {
+            log.info('[KeyExtractor] Decoding Base64 callKey string');
+            callKey = Buffer.from(callKeyData, 'base64');
+        } else if (callKeyData.type === 'Buffer' && Array.isArray(callKeyData.data)) {
+            callKey = Buffer.from(callKeyData.data);
+        } else if (Buffer.isBuffer(callKeyData) || callKeyData instanceof Uint8Array) {
+            callKey = Buffer.from(callKeyData);
+        } else {
+            log.warn('[KeyExtractor] Unknown callKey data format', { type: typeof callKeyData, format: callKeyData?.type });
+            return null;
+        }
+
+        if (callKey.length >= 30) {
+            const masterKey = callKey.slice(0, 16);
+            const masterSalt = callKey.slice(16, 30);
+            return { masterKey, masterSalt };
+        } else {
+            log.warn('[KeyExtractor] callKey too short after decoding', { length: callKey.length });
+            return null;
+        }
+    } catch (error) {
+        log.error('[KeyExtractor] Failed to extract keys from proto', { error });
+        return null;
+    }
+}
+
+/**
+ * Extract SRTP keys and relay endpoints from a decrypted WhatsApp call offer
+ * Supports both raw binary node structure and decrypted protobuf JSON
+ */
+export function extractSrtpKeys(offer: any): ExtractedKeys | null {
+    try {
+        log.info('[KeyExtractor] Extracting SRTP keys from offer');
+
+        // Check if this is a decrypted protobuf JSON (Baileys toJSON() format)
+        // Usually has a 'call' property
+        if (offer && offer.call) {
+            log.info('[KeyExtractor] Detected decrypted protobuf JSON format');
+            const keys = extractKeysFromDecryptedProto(offer);
+            if (keys) {
+                // For proto JSON, we might not have all relays yet, or they are in call.relays
+                // For now, return the keys and we'll get relays from transport later
+                const relays: { ip: string; port: number }[] = [];
+                if (Array.isArray(offer.call.relays)) {
+                    for (const r of offer.call.relays) {
+                        if (r.ip && r.port) relays.push({ ip: r.ip, port: r.port });
+                    }
+                }
+
+                log.info('[KeyExtractor] ✅ Successfully extracted keys from proto', {
+                    relays: relays.length
+                });
+                return {
+                    masterKey: keys.masterKey,
+                    masterSalt: keys.masterSalt,
+                    relayEndpoints: relays
+                };
+            }
+        }
+
+        // Check if this is a raw decrypted buffer from our sniffer
+        if (offer && offer._isRawDecrypted && offer.buffer && Array.isArray(offer.buffer.data)) {
+            log.info('[KeyExtractor] Detected raw decrypted buffer format');
+            const data = Buffer.from(offer.buffer.data);
+
+            // Pattern 1: Tag 2 (0x12) followed by length 32 or 30
+            let keyOffset = -1;
+            for (let i = 0; i < data.length - 32; i++) {
+                if (data[i] === 18 && (data[i + 1] === 32 || data[i + 1] === 30)) {
+                    keyOffset = i + 2;
+                    log.info('[KeyExtractor] Found key pattern at Tag 2 (0x12)', { offset: keyOffset, len: data[i + 1] });
+                    break;
+                }
+            }
+
+            // Pattern 2: Tag 3 (0x1A) - sometimes keys are here in newer versions
+            if (keyOffset === -1) {
+                for (let i = 0; i < data.length - 32; i++) {
+                    if (data[i] === 26 && (data[i + 1] === 32 || data[i + 1] === 30)) {
+                        keyOffset = i + 2;
+                        log.info('[KeyExtractor] Found key pattern at Tag 3 (0x1A)', { offset: keyOffset, len: data[i + 1] });
+                        break;
+                    }
+                }
+            }
+
+            // Pattern 3: Brute force length-delimited search
+            // Look for ANY byte followed by 30 or 32, where the following bytes look like random data (not all zeros)
+            if (keyOffset === -1) {
+                log.info('[KeyExtractor] Falling back to brute-force length search');
+                for (let i = 0; i < data.length - 32; i++) {
+                    const len = data[i + 1];
+                    if ((len === 30 || len === 32)) {
+                        // Check if the next 30 bytes are reasonably random (not just zeros)
+                        let zeroCount = 0;
+                        for (let j = 0; j < 30; j++) {
+                            if (data[i + 2 + j] === 0) zeroCount++;
+                        }
+                        if (zeroCount < 10) { // If it's not mostly zeros, it's likely our key
+                            keyOffset = i + 2;
+                            log.info('[KeyExtractor] Found potential key by brute force length search', {
+                                offset: keyOffset,
+                                tag: data[i],
+                                len
+                            });
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (keyOffset !== -1) {
+                const masterKey = data.slice(keyOffset, keyOffset + 16);
+                const masterSalt = data.slice(keyOffset + 16, keyOffset + 30);
+                log.info('[KeyExtractor] ✅ Successfully extracted keys from raw buffer pattern', {
+                    keyHex: masterKey.toString('hex').substring(0, 8) + '...'
+                });
+                return {
+                    masterKey,
+                    masterSalt,
+                    relayEndpoints: []
+                };
+            } else {
+                log.warn('[KeyExtractor] Could not find key pattern in raw decrypted buffer', {
+                    totalLen: data.length,
+                    hex: data.slice(0, 50).toString('hex') + '...'
+                });
+            }
+        }
+
+        log.info('[KeyExtractor] Attempting recursive node traversal');
+        const relayEndpoints: { ip: string; port: number }[] = [];
+        let audioKeys: Buffer | null = null;
+
+        if (!offer) {
+            log.warn('[KeyExtractor] Offer is null');
+            return null;
+        }
+
+        const tokens = new Map<string, Buffer>();
+
+        // Recursive function to find hbh_key and relays
+        const traverse = (node: any) => {
+            if (!node || typeof node !== 'object') return;
+
+            // Check if this is a node with a tag
+            if (node.tag) {
+                // Collect tokens first (they usually appear before relays in the list)
+                if (node.tag === 'token' && node.attrs?.id && node.content) {
+                    let tokenData: Buffer | null = null;
+                    if (node.content.type === 'Buffer' && Array.isArray(node.content.data)) {
+                        tokenData = Buffer.from(node.content.data);
+                    } else if (Buffer.isBuffer(node.content) || node.content instanceof Uint8Array) {
+                        tokenData = Buffer.from(node.content);
+                    }
+
+                    if (tokenData) {
+                        tokens.set(node.attrs.id, tokenData);
+                        // log.debug('[KeyExtractor] Found token', { id: node.attrs.id, len: tokenData.length });
+                    }
+                }
+
+                // Extract relay endpoints
+                if (node.tag === 'relay' || node.tag === 'te' || node.tag === 'te2' || node.tag === 'cand') {
+                    const endpoint = parseRelayEndpoint(node);
+                    if (endpoint) {
+                        // If endpoint doesn't have a token embedded, try to find it by token_id
+                        if (!endpoint.token && node.attrs?.token_id) {
+                            const tokenId = node.attrs.token_id;
+                            if (tokens.has(tokenId)) {
+                                endpoint.token = tokens.get(tokenId);
+                                // log.debug('[KeyExtractor] Associated token with relay', { relay: endpoint.ip, tokenId });
+                            }
+                        }
+
+                        relayEndpoints.push(endpoint);
+                        log.debug('[KeyExtractor] Found relay endpoint', {
+                            tag: node.tag,
+                            ip: endpoint.ip,
+                            port: endpoint.port,
+                            hasToken: !!endpoint.token
+                        });
+                    }
+                }
+
+                // Extract hbh_key (SRTP keys)
+                if (node.tag === 'hbh_key' && node.content) {
+                    if (node.content.type === 'Buffer' && Array.isArray(node.content.data)) {
+                        audioKeys = Buffer.from(node.content.data);
+                    } else if (Buffer.isBuffer(node.content) || node.content instanceof Uint8Array) {
+                        audioKeys = Buffer.from(node.content);
+                    }
+                    if (audioKeys) {
+                        log.info('[KeyExtractor] Found hbh_key tag', { length: audioKeys.length });
+                    }
+                }
+
+                // Compatibility: check for 'enc' tag too
+                if (node.tag === 'enc' && node.content) {
+                    if (node.content.type === 'Buffer' && Array.isArray(node.content.data)) {
+                        audioKeys = Buffer.from(node.content.data);
+                    } else if (Buffer.isBuffer(node.content) || node.content instanceof Uint8Array) {
+                        audioKeys = Buffer.from(node.content);
+                    }
+                    if (audioKeys) {
+                        log.info('[KeyExtractor] Found enc tag', { length: audioKeys.length });
+                    }
+                }
+            }
+
+            // Recurse into content if it's an array
+            if (Array.isArray(node.content)) {
+                for (const child of node.content) {
+                    traverse(child);
+                }
+            } else if (node.content && typeof node.content === 'object' && node.content.tag) {
+                // Some structures might have a single node as content instead of an array
+                traverse(node.content);
+            }
+        };
+
+        traverse(offer);
+
+        if (!audioKeys) {
+            log.warn('[KeyExtractor] No audio keys (hbh_key/enc) found in offer structure');
+            return null;
+        }
+
+        let keysBuffer: Buffer = (audioKeys as any);
+
+        // WhatsApp hbh_key (SRTP keys) is often Base64 encoded in the Buffer
+        // A 40-character Base64 string decodes to 30 bytes
+        if (keysBuffer.length === 40 && keysBuffer.toString().match(/^[A-Za-z0-9+/=]+$/)) {
+            log.info('[KeyExtractor] Decoding Base64 hbh_key');
+            keysBuffer = Buffer.from(keysBuffer.toString(), 'base64');
+        }
+
+        if (keysBuffer.length >= 30) {
+            const masterKey = keysBuffer.slice(0, 16);
+            const masterSalt = keysBuffer.slice(16, 30);
+
+            log.info('[KeyExtractor] ✅ Successfully extracted keys from node', {
+                keyLength: masterKey.length,
+                saltLength: masterSalt.length,
+                relays: relayEndpoints.length,
+            });
+
+            return { masterKey, masterSalt, relayEndpoints };
+        } else {
+            log.warn('[KeyExtractor] Audio keys too short', { length: keysBuffer.length });
+            return null;
+        }
+    } catch (error) {
+        log.error('[KeyExtractor] Failed to extract SRTP keys', { error });
+        return null;
+    }
+}
+
+/**
+ * Parse relay endpoint from a relay/te tag
+ */
+export function parseRelayEndpoint(item: any): { ip: string; port: number; token?: Buffer } | null {
+    try {
+        let content = item.content;
+
+        // Handle { type: 'Buffer', data: [...] } format from Baileys JSON
+        if (content && content.type === 'Buffer' && Array.isArray(content.data)) {
+            content = Buffer.from(content.data);
+        }
+
+        // 'te' tags have binary content with IP:port + optional token
+        if (content instanceof Uint8Array || Buffer.isBuffer(content)) {
+            const data = Buffer.from(content);
+
+            if (data.length >= 6) {
+                // Format: 4 bytes IP + 2 bytes port (big endian)
+                const ip = `${data[0]}.${data[1]}.${data[2]}.${data[3]}`;
+                const port = data.readUInt16BE(4);
+
+                // Any extra bytes are the relay token required for STUN binding
+                let token: Buffer | undefined = undefined;
+                if (data.length > 6) {
+                    token = data.slice(6);
+                    log.debug('[KeyExtractor] Extracted token from TE', { ip, port, tokenLen: token.length, tokenHex: token.toString('hex') });
+                }
+
+                return { ip, port, token };
+            }
+        }
+
+        // ... rest of function
+
+        // 'relay' tags might have address in attributes
+        if (item.attrs) {
+            if (item.attrs.ip && item.attrs.port) {
+                return {
+                    ip: item.attrs.ip,
+                    port: parseInt(item.attrs.port, 10),
+                };
+            }
+        }
+
+        return null;
+    } catch (error) {
+        return null;
+    }
+}
+
+/**
+ * Parse relay endpoints from any node structure (recursive)
+ */
+export function extractRelaysFromTransport(node: any): { ip: string; port: number, token?: Buffer }[] {
+    const relays: { ip: string; port: number, token?: Buffer }[] = [];
+    const tokens = new Map<string, Buffer>();
+
+    const traverse = (n: any) => {
+        if (!n || typeof n !== 'object') return;
+
+        // Collect tokens
+        if (n.tag === 'token' && n.attrs?.id && n.content) {
+            let tokenData: Buffer | null = null;
+            if (n.content.type === 'Buffer' && Array.isArray(n.content.data)) {
+                tokenData = Buffer.from(n.content.data);
+            } else if (Buffer.isBuffer(n.content) || n.content instanceof Uint8Array) {
+                tokenData = Buffer.from(n.content);
+            }
+            if (tokenData) tokens.set(n.attrs.id, tokenData);
+        }
+
+        if (n.tag === 'te' || n.tag === 'cand' || n.tag === 'relay' || n.tag === 'te2') {
+            const endpoint = parseRelayEndpoint(n);
+            if (endpoint) {
+                // Lookup token if missing and token_id is present
+                if (!endpoint.token && n.attrs?.token_id && tokens.has(n.attrs.token_id)) {
+                    endpoint.token = tokens.get(n.attrs.token_id);
+                }
+                relays.push(endpoint);
+            }
+        }
+
+        if (Array.isArray(n.content)) {
+            for (const child of n.content) {
+                traverse(child);
+            }
+        } else if (n.content && typeof n.content === 'object' && n.content.tag) {
+            traverse(n.content);
+        }
+    };
+
+    try {
+        traverse(node);
+        if (relays.length > 0) {
+            log.debug('[KeyExtractor] Extracted relays from transport', { count: relays.length });
+        }
+    } catch (error) {
+        log.error('[KeyExtractor] Failed to parse relays', { error });
+    }
+
+    return relays;
+}
+
+/**
+ * Extract Reflexive Transport Endpoint (IP/Port) from Offer
+ * WhatsApp sends our public IP as seen by them in the 'rte' tag inside the offer
+ */
+export function extractRteFromOffer(offer: any): { ip: string; port: number } | null {
+    try {
+        let rteNode: any = null;
+
+        const traverse = (n: any) => {
+            if (!n || typeof n !== 'object') return;
+
+            if (n.tag === 'rte') {
+                rteNode = n;
+                return;
+            }
+
+            if (Array.isArray(n.content)) {
+                for (const child of n.content) {
+                    traverse(child);
+                    if (rteNode) return;
+                }
+            } else if (n.content && typeof n.content === 'object') {
+                traverse(n.content);
+            }
+        };
+
+        traverse(offer);
+
+        if (rteNode && rteNode.content) {
+            let data: Buffer | null = null;
+            if (Buffer.isBuffer(rteNode.content)) {
+                data = rteNode.content;
+            } else if (rteNode.content.type === 'Buffer' && Array.isArray(rteNode.content.data)) {
+                data = Buffer.from(rteNode.content.data);
+            }
+
+            // Parse RTE format: [0x28, 0x04, IP(4), 0x00, 0x00, PORT(2), ...]
+            if (data && data.length >= 10 && data[0] === 0x28 && data[1] === 0x04) {
+                const ip = `${data[2]}.${data[3]}.${data[4]}.${data[5]}`;
+                const port = data.readUInt16BE(8); // Bytes 8 and 9 are port
+
+                log.info('[KeyExtractor] ✅ Extracted Public IP (RTE) from Offer', { ip, port });
+                return { ip, port };
+            }
+        }
+
+        return null;
+    } catch (error) {
+        log.error('[KeyExtractor] Failed to extract RTE', { error });
+        return null;
+    }
+}

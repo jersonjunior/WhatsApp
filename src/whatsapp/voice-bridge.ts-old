@@ -1,0 +1,87 @@
+
+import * as dgram from 'dgram';
+import { log } from '../utils/logger';
+
+export class VoiceBridge {
+    private socket: dgram.Socket;
+    private localPort: number;
+    private targetIp: string | null = null;
+    private targetPort: number | null = null;
+    private asteriskIp: string | null = null;
+    private asteriskPort: number | null = null;
+    private callKey: Buffer | null = null;
+    private isRunning: boolean = false;
+
+    constructor(localPort: number = 10000) {
+        this.localPort = localPort;
+        this.socket = dgram.createSocket('udp4');
+    }
+
+    start(whatsappIp: string, whatsappPort: number, asteriskIp: string, asteriskPort: number, callKey: Buffer) {
+        this.targetIp = whatsappIp;
+        this.targetPort = whatsappPort;
+        this.asteriskIp = asteriskIp;
+        this.asteriskPort = asteriskPort;
+        this.callKey = callKey;
+        this.isRunning = true;
+
+        this.socket.on('message', (msg, rinfo) => {
+            this.handleMessage(msg, rinfo);
+        });
+
+        this.socket.on('error', (err) => {
+            log.error('[VoiceBridge] Socket error', err);
+            this.socket.close();
+        });
+
+        this.socket.bind(this.localPort, () => {
+            log.info(`[VoiceBridge] UDP Bridge listening on port ${this.localPort}`);
+
+            // Initiate Handshake with WhatsApp Relay
+            this.sendHandshake();
+        });
+    }
+
+    private sendHandshake() {
+        if (!this.targetIp || !this.targetPort) return;
+
+        // Simple "ping" or "binding request" to open NAT
+        // Trying a STUN Binding Request format (simple version)
+        const bumper = Buffer.alloc(20);
+        bumper.writeUInt16BE(0x0001, 0); // Binding Request
+
+        log.info(`[VoiceBridge] Sending Handshake to ${this.targetIp}:${this.targetPort}`);
+        this.socket.send(bumper, this.targetPort, this.targetIp);
+    }
+
+    private handleMessage(msg: Buffer, rinfo: dgram.RemoteInfo) {
+        if (!this.isRunning) return;
+
+        // log.debug(`[VoiceBridge] Received ${msg.length} bytes from ${rinfo.address}:${rinfo.port}`);
+
+        // Traffic from WhatsApp Relay
+        if (rinfo.address === this.targetIp && rinfo.port === this.targetPort) {
+            // Forward to Asterisk
+            if (this.asteriskIp && this.asteriskPort) {
+                this.socket.send(msg, this.asteriskPort, this.asteriskIp, (err) => {
+                    if (err) log.error('[VoiceBridge] Failed to forward to Asterisk', err);
+                });
+            }
+        }
+        // Traffic from Asterisk
+        else if (rinfo.address === this.asteriskIp && rinfo.port === this.asteriskPort) {
+            // Forward to WhatsApp Relay
+            if (this.targetIp && this.targetPort) {
+                this.socket.send(msg, this.targetPort, this.targetIp, (err) => {
+                    if (err) log.error('[VoiceBridge] Failed to forward to WhatsApp', err);
+                });
+            }
+        }
+    }
+
+    stop() {
+        this.isRunning = false;
+        this.socket.close();
+        log.info('[VoiceBridge] Stopped');
+    }
+}
